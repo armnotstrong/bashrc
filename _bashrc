@@ -1,0 +1,122 @@
+# this bashrc is origined from stephenpcg<stephenpcg@gmail.com>
+
+# If not running interactively, don't do anything
+[ -z "$PS1" ] && return
+
+# record command time in history
+HISTTIMEFORMAT="[%Y-%m-%d %H:%M:%S] "
+HISTSIZE=100000
+shopt -s histappend
+
+# set a fancy prompt (non-color, unless we know we "want" color)
+case "$TERM" in
+    xterm-color) color_prompt=yes;;
+esac
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+    . /etc/bash_completion
+fi
+
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+fi
+
+# colors for PS1
+NO_COLOR="\[\033[0m\]"
+OP_COLOR=$'\E[1;31m'
+RED_COLOR=$'\E[1;31m'
+NON_OP_ERR_COLOR=$'\E[1;41m'
+NON_OP_COLOR=$'\E[1;34m'
+OP_ERR_COLOR=$'\E[1;43m'
+
+[[ -n "$STY" ]] && IS_SCREEN="-(screen)" || IS_SCREEN=""
+_GITPROMPT=$(__git_ps1 "%s")
+
+[[ -n $_GITPROMPT ]] && GITPROMPT="-($_GITPROMPT)" || GITPROMPT=""
+
+_HOSTNAME=$(hostname -f)
+_HOSTNAME=${_HOSTNAME%%.armnotstrong.me}
+_CLUSTER=${_HOSTNAME##*.}
+
+term_title() {
+    [[ -n $1 ]] && TERM_TITLE="$1" || TERM_TITLE=""
+}
+
+export GIT_PS1_SHOWDIRTYSTATE=1
+promt_git() {
+    __git__val=$(__git_ps1 "-(%s)")
+    if [[ -z $__git__val ]];then
+        echo ""
+    else 
+        echo "$__git__val"
+    fi
+}
+
+prompt_command() {
+    RETVAL=$1
+
+    ## parse term title
+    case "$TERM" in 
+        screen)
+            [[ -n "$TERM_TITLE" ]] \
+                && _TERM_TITLE=$'\033k'"[$TERM_TITLE]"$'\033\\' \
+                || _TERM_TITLE=$'\033k'"[$_HOSTNAME]"$'\033\\'
+            ;;
+        xterm*)
+            [[ -n "$TERM_TITLE" ]] \
+                && _TERM_TITLE=$'\E]0;'"$TERM_TITLE: [$_HOSTNAME] ${PWD/$HOME/~}"$'\007' \
+                || _TERM_TITLE=$'\E]0;'"[$_HOSTNAME] ${USER}@${_HOSTNAME}: ${PWD/$HOME/~}"$'\007'
+            ;;
+        *)
+            _TERM_TITLE=""
+    esac
+
+    ## parse command line color
+    if [[ "$USER" != "op" ]]; then
+	[[ "$RETVAL" -eq 0 ]] && PS1_COLOR="${NON_OP_COLOR}" || PS1_COLOR="${NON_OP_ERR_COLOR}"
+    else
+	[[ "$RETVAL" -eq 0 ]] && PS1_COLOR="${OP_COLOR}" || PS1_COLOR="${OP_ERR_COLOR}"
+    fi
+
+    ## parse return value
+    [[ "$RETVAL" -ne 0 ]] \
+	&& IS_RETURN_VAL="-(\$?:$RETVAL)" \
+	|| IS_RETURN_VAL=""
+
+    GIT_BRANCH=$(promt_git)
+    if [[ -z $GIT_BRANCH ]]; then
+        GITCOLOR=${PS1_COLOR}
+    elif [[ $GIT_BRANCH == *master* ]]; then
+        GITCOLOR=${PS1_COLOR}
+    else
+        GITCOLOR=${RED_COLOR}
+    fi
+
+}
+PROMPT_COMMAND="prompt_command \$?"
+PS1="\${_TERM_TITLE}\n\
+\[\${PS1_COLOR}\](\u)-(${_HOSTNAME})${IS_SCREEN}\[\${PS1_COLOR}\]-(\w)\${IS_RETURN_VAL}${NO_COLOR}\n\
+\[\${PS1_COLOR}\](! \!)\[\${GITCOLOR}\]\${GIT_BRANCH}->${NO_COLOR} "
+
+# source bash aliases if exist
+export LS_OPTIONS='--color=auto'
+eval "`dircolors`"
+alias ls='ls $LS_OPTIONS'
+alias ll='ls $LS_OPTIONS -l'
+alias l='ls $LS_OPTIONS -lA'
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+DEBEMAIL="zhaoxmustc@gmail.com"
+DEBFULLNAME="ximing zhao"
+export XMODIFIERS="@im=fcitx"
+export GTK_IM_MODULE="fcitx"
+export QT_IM_MODULE="fcitx"
+export XIM_PROGRAM="fcitx"
+export XMODIFIERS="@im=fcitx"
+export XIM="fcitx"
+export XIM_PROGRAM="fcitx"
+export PATH=$PATH:/sbin/
