@@ -120,3 +120,6 @@ export XMODIFIERS="@im=fcitx"
 export XIM="fcitx"
 export XIM_PROGRAM="fcitx"
 export PATH=$PATH:/sbin/
+export GOROOT=/usr/lib/go
+export GOPATH=$HOME/go
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
